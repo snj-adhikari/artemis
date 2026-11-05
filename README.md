@@ -180,22 +180,6 @@ PYTHONPATH = "/path/to/artemis"
 }
 ```
 
-### Claude Code provider (no API keys)
-
-Runs every LLM role through your logged-in `claude` CLI.
-
-```bash
-cp config/artemis.claude-code.example.jsonc config/artemis.local.jsonc   # or export ARTEMIS_ARTEMIS_JSONC=/path/to/file.jsonc
-uv run artemis doctor                       # should report Claude Code active
-export OBJECT_DETECTOR_TIMEOUT=30
-uv run python scripts/smoke_claude_code.py  # run from repo root, or pass a screenshot path
-```
-
-* One `claude -p` process per call: expect 2-3s+ extra latency per step.
-* Consumes Claude Code plan limits.
-* No temperature or thinking control.
-* Set `OBJECT_DETECTOR_TIMEOUT=30`; the 10s default is too short.
-
 ### 3. Mount Behavioral Rules for AI Agents (Highly Recommended)
 
 To ensure your AI coding assistant acts with the rigor of a senior mobile test engineer and never hallucinates UI interactions, we provide a dedicated testing mindset rules file at [`mcp_server/rules.md`](./mcp_server/rules.md) (covering **Active Exploration before coding**, **Flash vs. Pro routing strategy**, **Latency & Timing compensation**, and the **"Dynamic-First, Coordinate-Fallback" locator pattern**).

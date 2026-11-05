@@ -3,10 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pydantic import SecretStr
 
+from artemis.core.diagnostics.probes import claude_code_probe as ccp
 from artemis.core.diagnostics.probes import credentials_probe as cp
 from artemis.core.diagnostics.schema import ProbeStatus
 
-MOD = "artemis.core.diagnostics.probes.credentials_probe"
+MOD = "artemis.core.diagnostics.probes.claude_code_probe"
 KEY = SecretStr("AIzaSyFAKEKEYFAKEKEY1234")
 
 
@@ -24,14 +25,14 @@ async def test_cli_ready_when_auth_status_exits_zero():
         patch(f"{MOD}.asyncio.create_subprocess_exec", AsyncMock(return_value=_proc(0))) as spawn,
         patch.dict("os.environ", {"CLAUDECODE": "1"}),
     ):
-        assert await cp._claude_cli_ready() == (True, "")
+        assert await ccp._claude_cli_ready() == (True, "")
     assert "CLAUDECODE" not in spawn.call_args.kwargs["env"]
 
 
 @pytest.mark.asyncio
 async def test_cli_not_on_path():
     with patch(f"{MOD}.shutil.which", return_value=None):
-        ready, reason = await cp._claude_cli_ready()
+        ready, reason = await ccp._claude_cli_ready()
     assert not ready and "not found" in reason
 
 
@@ -41,7 +42,7 @@ async def test_cli_logged_out():
         patch(f"{MOD}.shutil.which", return_value="/bin/claude"),
         patch(f"{MOD}.asyncio.create_subprocess_exec", AsyncMock(return_value=_proc(1))),
     ):
-        ready, _ = await cp._claude_cli_ready()
+        ready, _ = await ccp._claude_cli_ready()
     assert not ready
 
 
@@ -82,5 +83,5 @@ async def test_probe_gemini_path_unchanged_without_claude_code():
 
 
 def test_config_scan():
-    assert cp._contains_claude_code({"a": [{"provider": "claude-code"}]})
-    assert not cp._contains_claude_code({"a": {"provider": "google"}})
+    assert ccp._contains_claude_code({"a": [{"provider": "claude-code"}]})
+    assert not ccp._contains_claude_code({"a": {"provider": "google"}})

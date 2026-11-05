@@ -45,6 +45,7 @@ class ModelProvider(StrEnum):
     OLLAMA = "ollama"
     VLLM = "vllm"
     CUSTOM = "custom"
+    CLAUDE_CODE = "claude-code"
 
     @classmethod
     def from_string(cls, val: Any) -> "ModelProvider":
@@ -75,6 +76,7 @@ class ModelProvider(StrEnum):
             "ollama": cls.OLLAMA,
             "vllm": cls.VLLM,
             "custom": cls.CUSTOM,
+            "claudecode": cls.CLAUDE_CODE,
         }
         provider = mapping.get(s)
         if provider is None:
@@ -384,6 +386,13 @@ class ModelFactory:
             if endpoint.reasoning_effort:
                 kwargs["reasoning_effort"] = endpoint.reasoning_effort
             return ChatOpenAI(**{k: v for k, v in kwargs.items() if v is not None})
+
+        elif provider == ModelProvider.CLAUDE_CODE:
+            from artemis.llm.claude_code import ClaudeCodeChatModel
+
+            return ClaudeCodeChatModel(
+                model_name=endpoint.model_name, timeout_s=endpoint.timeout_seconds
+            )
 
         else:
             raise ValueError(f"Unsupported model provider: {provider}")

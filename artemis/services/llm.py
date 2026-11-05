@@ -961,6 +961,17 @@ def _get_llm(
 get_llm: GetLLM = _get_llm
 
 
+def get_non_google_llm(ctx: ArtemisContext, name: str) -> BaseChatModel | None:
+    """Return the configured LLM for ``name`` unless it is a Google/Vertex endpoint."""
+    try:
+        endpoint = _resolve_endpoint(ctx, name)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+    if endpoint.provider in (ModelProvider.GOOGLE, ModelProvider.VERTEX_AI):
+        return None
+    return get_llm(ctx, name)
+
+
 class _ObservedFallback(FallbackRunner):
     """Fall back only on failures another endpoint could fix, and record it.
 

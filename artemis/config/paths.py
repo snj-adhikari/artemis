@@ -163,6 +163,9 @@ def get_config_path(filename: str, default_bundled_path: Path | None = None) -> 
         if env_path.exists():
             return env_path
 
+    if filename == "artemis.jsonc" and (CONFIG_DIR / "artemis.local.jsonc").is_file():
+        return CONFIG_DIR / "artemis.local.jsonc"
+
     # Check config/ directory
     config_dir_path = CONFIG_DIR / filename
     if config_dir_path.exists():

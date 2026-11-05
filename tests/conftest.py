@@ -19,11 +19,17 @@ integration and end-to-end trees remain directly runnable, and receive stable
 markers here so callers can select them without relying on filename patterns.
 """
 
+import os
 from pathlib import Path
 
 import pytest
 
-from artemis.drivers.mock.mock_driver import MockDeviceDriver
+# Keep a developer's gitignored config/artemis.local.jsonc out of the suite.
+os.environ.setdefault(
+    "ARTEMIS_ARTEMIS_JSONC", str(Path(__file__).resolve().parents[1] / "config" / "artemis.jsonc")
+)
+
+from artemis.drivers.mock.mock_driver import MockDeviceDriver  # noqa: E402
 
 
 @pytest.fixture

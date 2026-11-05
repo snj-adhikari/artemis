@@ -25,6 +25,7 @@ from artemis.config.constants import (
     DEFAULT_EXPLORER_VERSION,
     ExplorerVersion,
 )
+from artemis.config.local_override import apply_local_override
 from artemis.config.paths import ROOT_DIR, get_config_path
 from artemis.llm.google import VideoProcessing
 from third_party.mobile_use.utils.file import load_jsonc
@@ -1089,7 +1090,7 @@ def load_agent_config(
 
     try:
         with open(resolved_path, encoding="utf-8") as f:
-            data = load_jsonc(f)
+            data = apply_local_override(load_jsonc(f))
             if isinstance(data, dict) and "agent" in data:
                 return AgentGlobalConfig.model_validate(data["agent"])
             return AgentGlobalConfig.model_validate(data)

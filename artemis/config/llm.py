@@ -22,6 +22,7 @@ from artemis.config.constants import (
     LLM_CONFIG_FILENAME,
     AgentNode,
 )
+from artemis.config.local_override import apply_local_override
 from artemis.config.paths import ROOT_DIR, get_config_path
 from artemis.utils.cython_compat import CyFunctionDetector
 from third_party.mobile_use.config import llm as base_llm_config
@@ -213,7 +214,7 @@ def parse_llm_config() -> LLMConfig:
     try:
         with open(config_path, encoding="utf-8") as f:
             config_dict = load_jsonc(f)
-            expanded_dict = _expand_default_into_nodes(config_dict)
+            expanded_dict = apply_local_override(_expand_default_into_nodes(config_dict))
             return LLMConfig.model_validate(expanded_dict)
     except Exception as e:
         logger.error(f"Failed to load or parse llm config: {config_path}. Error: {e}")

@@ -14,11 +14,7 @@
 
 """LLM & Multimodal Vision Credentials Readiness Probe."""
 
-import asyncio
-import os
-import shutil
 from typing import Any
-
 from artemis.config import settings
 from artemis.core.diagnostics.probes.base import BaseProbe
 from artemis.core.diagnostics.schema import (
@@ -27,48 +23,6 @@ from artemis.core.diagnostics.schema import (
     ProbeResult,
     ProbeStatus,
 )
-
-
-def _contains_claude_code(node: Any) -> bool:
-    if isinstance(node, dict):
-        return node.get("provider") == "claude-code" or any(
-            _contains_claude_code(v) for v in node.values()
-        )
-    if isinstance(node, (list, tuple)):
-        return any(_contains_claude_code(v) for v in node)
-    return False
-
-
-def _config_uses_claude_code() -> bool:
-    try:
-        from artemis.config.llm import get_default_llm_config
-
-        return _contains_claude_code(get_default_llm_config().model_dump())
-    except Exception:
-        return False
-
-
-async def _claude_cli_ready() -> tuple[bool, str]:
-    path = shutil.which("claude")
-    if not path:
-        return False, "claude CLI not found on PATH"
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
-    proc = await asyncio.create_subprocess_exec(
-        path,
-        "auth",
-        "status",
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.DEVNULL,
-        env=env,
-    )
-    try:
-        await asyncio.wait_for(proc.wait(), timeout=10)
-    except TimeoutError:
-        proc.kill()
-        return False, "claude auth status timed out"
-    if proc.returncode != 0:
-        return False, "claude CLI is not logged in"
-    return True, ""
 
 
 class LLMCredentialsProbe(BaseProbe):
@@ -93,6 +47,8 @@ class LLMCredentialsProbe(BaseProbe):
         return "***"
 
     async def probe(self) -> ProbeResult:
+        import os
+
         from artemis.config.settings import is_placeholder_key
 
         gemini_key = settings.get_api_key("google")
@@ -206,50 +162,10 @@ class LLMCredentialsProbe(BaseProbe):
             "api_keys": api_keys_map,
         }
 
-        if _config_uses_claude_code():
-            ready, reason = await _claude_cli_ready()
-            metadata["providers"] = [
-                *configured_providers,
-                {"provider": "claude-code", "label": "Claude Code"},
-            ]
-            if ready:
-                return ProbeResult(
-                    id=self.probe_id,
-                    category=self.category,
-                    title="Multimodal LLM API Key",
-                    status=ProbeStatus.PASS,
-                    is_blocker=self.is_blocker,
-                    summary="Active (Claude Code)",
-                    description="Claude Code CLI is logged in and used as the LLM provider.",
-                    metadata=metadata,
-                    actions=[
-                        ProbeAction(
-                            action_type="hint",
-                            label="Provider Active",
-                            payload="Claude Code CLI login is active.",
-                        )
-                    ],
-                )
-            missing = "not found" in reason
-            return ProbeResult(
-                id=self.probe_id,
-                category=self.category,
-                title="Multimodal LLM API Key",
-                status=ProbeStatus.FAIL,
-                is_blocker=self.is_blocker,
-                summary="Claude Code Not Ready",
-                description=reason,
-                metadata=metadata,
-                actions=[
-                    ProbeAction(
-                        action_type="link" if missing else "command",
-                        label="Install Claude Code" if missing else "Log in to Claude Code",
-                        payload="https://docs.claude.com/en/docs/claude-code"
-                        if missing
-                        else "claude auth login",
-                    )
-                ],
-            )
+        from artemis.core.diagnostics.probes.claude_code_probe import claude_code_result
+
+        if result := await claude_code_result(self, metadata, configured_providers):
+            return result
 
         # Case 1: Gemini API Key configured (Standard / Recommended)
         if gemini_key:

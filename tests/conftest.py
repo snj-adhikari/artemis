@@ -25,9 +25,7 @@ from pathlib import Path
 import pytest
 
 # Keep a developer's gitignored config/artemis.local.jsonc out of the suite.
-os.environ.setdefault(
-    "ARTEMIS_ARTEMIS_JSONC", str(Path(__file__).resolve().parents[1] / "config" / "artemis.jsonc")
-)
+os.environ.setdefault("ARTEMIS_LOCAL_JSONC", os.devnull)
 
 from artemis.drivers.mock.mock_driver import MockDeviceDriver  # noqa: E402
 

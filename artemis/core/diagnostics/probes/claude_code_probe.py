@@ -34,7 +34,7 @@ def _contains_claude_code(node: Any) -> bool:
     return False
 
 
-def _config_uses_claude_code() -> bool:
+def config_uses_claude_code() -> bool:
     try:
         from artemis.config.llm import get_default_llm_config
 
@@ -70,7 +70,7 @@ async def claude_code_result(
     probe: Any, metadata: dict[str, Any], configured_providers: list[dict[str, Any]]
 ) -> ProbeResult | None:
     """Return the probe result when the config routes to claude-code, else None."""
-    if not _config_uses_claude_code():
+    if not config_uses_claude_code():
         return None
     ready, reason = await _claude_cli_ready()
     metadata["providers"] = [

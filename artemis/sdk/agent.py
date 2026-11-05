@@ -34,6 +34,7 @@ from artemis.config import (
     run_tuning_for_profile,
     settings,
 )
+from artemis.core.diagnostics.probes.claude_code_probe import config_uses_claude_code
 from artemis.context import (
     ArtemisContext,
     DevicePlatform,
@@ -143,7 +144,7 @@ class Agent(AgentBase):
             if not key and settings.GOOGLE_API_KEY:
                 key = settings.GOOGLE_API_KEY.get_secret_value()
 
-            if not key:
+            if not key or config_uses_claude_code():
                 logger.warning("Skipping LLM pre-warming: No API key available.")
                 publish_startup_progress(
                     "model_ready",

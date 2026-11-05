@@ -49,7 +49,7 @@ async def test_cli_logged_out():
 @pytest.mark.asyncio
 async def test_probe_passes_with_claude_code_despite_google_key():
     with (
-        patch(f"{MOD}._config_uses_claude_code", return_value=True),
+        patch(f"{MOD}.config_uses_claude_code", return_value=True),
         patch(f"{MOD}._claude_cli_ready", AsyncMock(return_value=(True, ""))),
         patch("artemis.config.settings.Settings.get_api_key", return_value=KEY),
     ):
@@ -61,7 +61,7 @@ async def test_probe_passes_with_claude_code_despite_google_key():
 @pytest.mark.asyncio
 async def test_probe_fails_with_login_action_when_not_ready():
     with (
-        patch(f"{MOD}._config_uses_claude_code", return_value=True),
+        patch(f"{MOD}.config_uses_claude_code", return_value=True),
         patch(
             f"{MOD}._claude_cli_ready",
             AsyncMock(return_value=(False, "claude CLI is not logged in")),
@@ -75,7 +75,7 @@ async def test_probe_fails_with_login_action_when_not_ready():
 @pytest.mark.asyncio
 async def test_probe_gemini_path_unchanged_without_claude_code():
     with (
-        patch(f"{MOD}._config_uses_claude_code", return_value=False),
+        patch(f"{MOD}.config_uses_claude_code", return_value=False),
         patch("artemis.config.settings.Settings.get_api_key", return_value=KEY),
     ):
         result = await cp.LLMCredentialsProbe().probe()
